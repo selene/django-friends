@@ -6,6 +6,7 @@ import vobject
 import ybrowserauth
 import simplejson
 import gdata.contacts.service
+import gdata.auth
 
 def import_vcards(stream, user):
     """
@@ -85,8 +86,12 @@ def import_google(authsub_token, user):
     """
     
     contacts_service = gdata.contacts.service.ContactsService()
-    contacts_service.auth_token = authsub_token
-    contacts_service.UpgradeToSessionToken()
+    if isinstance(authsub_token, gdata.auth.AuthSubToken):
+        contacts_service.UpgradeToSessionToken(authsub_token)
+    else:
+        auth_token = gdata.auth.AuthSubToken(scopes=['http://www.google.com/m8/feeds/'])
+        auth_token.set_token_string(authsub_token)
+        contacts_service.UpgradeToSessionToken(auth_token)
     entries = []
     feed = contacts_service.GetContactsFeed()
     entries.extend(feed.entry)
